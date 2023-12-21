@@ -1,0 +1,44 @@
+---
+- name: Debian 11 to Debian 12 Upgrade
+  hosts: test
+  become: true
+
+  tasks:
+    - name: Update package lists
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+        force_apt_get: yes
+        dpkg_options: "force-confnew,force-confdef"
+
+    - name: Update sources.list
+      replace:
+        path: /etc/apt/sources.list
+        regexp: 'deb http://deb.debian.org/debian bullseye main'
+        replace: 'deb http://deb.debian.org/debian bookworm main'
+        backup: yes
+
+    - name: Update package lists (again)
+      apt:
+        update_cache: yes
+
+    - name: Upgrade distribution
+      apt:
+        upgrade: dist
+        autoremove: yes
+        force_apt_get: yes
+        dpkg_options: "force-confnew,force-confdef"
+
+    - name: Reboot the system
+      reboot:
+        reboot_timeout: 300
+        pre_reboot_delay: 5
+
+    - name: Wait for the system to come back online
+      wait_for_connection:
+        delay: 5
+        timeout: 300
